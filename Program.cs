@@ -6,117 +6,119 @@
 
 Exception? exception = null;
 int speedInput;
+string restart = "yes";
 string prompt = $"Select speed from 1 - 10:  ";
 string? input;
-
-while (IsUserInputValid() == false)
+while (restart is "yes" or "Yes")
 {
-    if (string.IsNullOrWhiteSpace(input))
+    while (IsUserInputValid() == false)
     {
-        speedInput = 5;
-        break;
-    }
-    else
-    {
-        Console.WriteLine("Invalid Input. Try Again...");
-        Console.Clear();
-    }
-}
-int[] velocities = [250, 210, 175, 150, 125, 100, 75, 65, 57, 50];
-int velocity = velocities[speedInput - 1];
-char[] DirectionChars = ['^', 'v', '<', '>'];
-Console.BackgroundColor = ConsoleColor.White;
-int width = Console.WindowWidth;
-int height = Console.WindowHeight;
-Tile[,] board = new Tile[width, height];
-Direction? direction = null;
-Queue<(int X, int Y)> snake = new();
-(int X, int Y) = (width / 2, height / 2);
-bool closeRequested = false;
-
-try
-{
-    Console.CursorVisible = false;
-    Console.Clear();
-    snake.Enqueue((X, Y));
-    board[X, Y] = Tile.Snake;
-    PositionFood();
-    Console.SetCursorPosition(X, Y);
-    Console.Write('S');
-    while (direction is null && !closeRequested)
-    {
-        GetDirection();
-    }
-    while (!closeRequested)
-    {
-        if (Console.WindowWidth != width || Console.WindowHeight != height)
+        if (string.IsNullOrWhiteSpace(input))
         {
-            Console.Clear();
-            Console.Write("Console was resized. Snake game has ended.");
-            return;
-        }
-        switch (direction)
-        {
-            case Direction.Up:
-                Y--;
-                break;
-            case Direction.Down:
-                Y++;
-                break;
-            case Direction.Left:
-                X--;
-                break;
-            case Direction.Right:
-                X++;
-                break;
-        }
-        if (X < 0 || X >= width ||
-            Y < 0 || Y >= height ||
-            board[X, Y] is Tile.Snake)
-        {
-            Console.Clear();
-            Console.Write("Game Over. Score: " + (snake.Count - 1) + ".");
-            return;
-        }
-        Console.SetCursorPosition(X, Y);
-
-        int IntDirection = (int)direction!;
-        char DirectionChar = DirectionChars[IntDirection];
-
-        Console.ForegroundColor = ChooseRandomForegroundColour();
-        Console.Write(DirectionChar);
-        snake.Enqueue((X, Y));
-        if (board[X, Y] is Tile.Food)
-        {
-            PositionFood();
+            speedInput = 5;
+            break;
         }
         else
         {
-            (int x, int y) = snake.Dequeue();
-            board[x, y] = Tile.Open;
-            Console.SetCursorPosition(x, y);
-            Console.Write(' ');
+            Console.WriteLine("Invalid Input. Try Again...");
+            Console.Clear();
         }
-        board[X, Y] = Tile.Snake;
-        if (Console.KeyAvailable)
-        {
-            GetDirection();
-        }
-        Thread.Sleep(velocity - speedInput * snake.Count);
+    }
+    int[] velocities = [250, 210, 175, 150, 125, 100, 75, 65, 57, 50];
+    int velocity = velocities[speedInput - 1];
+    char[] DirectionChars = ['^', 'v', '<', '>'];
+    Console.BackgroundColor = ConsoleColor.White;
+    int width = Console.WindowWidth;
+    int height = Console.WindowHeight;
+    Tile[,] board = new Tile[width, height];
+    Direction? direction = null;
+    Queue<(int X, int Y)> snake = new();
+    (int X, int Y) = (width / 2, height / 2);
+    bool CloseRequested = false;
 
+    try
+    {
+        Console.CursorVisible = false;
+        Console.Clear();
+        snake.Enqueue((X, Y));
+        board[X, Y] = Tile.Snake;
+        PositionFood();
+        Console.SetCursorPosition(X, Y);
+        Console.Write('S');
+        while (direction is null && !CloseRequested)
+        {
+            (direction, CloseRequested) = GetDirection(direction, CloseRequested);
+        }
+        while (!CloseRequested)
+        {
+            if (Console.WindowWidth != width || Console.WindowHeight != height)
+            {
+                Console.Clear();
+                Console.Write("Console was resized. Snake game has ended.");
+                return;
+            }
+            switch (direction)
+            {
+                case Direction.Up:
+                    Y--;
+                    break;
+                case Direction.Down:
+                    Y++;
+                    break;
+                case Direction.Left:
+                    X--;
+                    break;
+                case Direction.Right:
+                    X++;
+                    break;
+            }
+            if (X < 0 || X >= width ||
+                Y < 0 || Y >= height ||
+                board[X, Y] is Tile.Snake)
+            {
+                Console.Clear();
+                Console.Write("Game Over. Score: " + (snake.Count - 1) + ".");
+                return;
+            }
+            Console.SetCursorPosition(X, Y);
+
+            int IntDirection = (int)direction!;
+            char DirectionChar = DirectionChars[IntDirection];
+
+            Console.ForegroundColor = ChooseRandomForegroundColour();
+            Console.Write(DirectionChar);
+            snake.Enqueue((X, Y));
+            if (board[X, Y] is Tile.Food)
+            {
+                PositionFood();
+            }
+            else
+            {
+                (int x, int y) = snake.Dequeue();
+                board[x, y] = Tile.Open;
+                Console.SetCursorPosition(x, y);
+                Console.Write(' ');
+            }
+            board[X, Y] = Tile.Snake;
+            if (Console.KeyAvailable)
+            {
+                GetDirection();
+            }
+            Thread.Sleep(velocity - speedInput * snake.Count);
+
+        }
+    }
+    catch (Exception e)
+    {
+        exception = e;
+        throw;
+    }
+    finally
+    {
+        Console.Clear();
+        Console.WriteLine(exception?.ToString() ?? "Snake was closed.");
     }
 }
-catch (Exception e)
-{
-    exception = e;
-    throw;
-}
-finally
-{
-    Console.Clear();
-    Console.WriteLine(exception?.ToString() ?? "Snake was closed.");
-}
-
 bool IsUserInputValid()
 {
     Console.Write(prompt);
@@ -127,7 +129,7 @@ bool IsUserInputValid()
     { return false; }
     else { return true; }
 }
-void GetDirection()
+(Direction?, bool) GetDirection(Direction? direction, bool CloseRequested)
 {
     switch (Console.ReadKey(true).Key)
     {
@@ -144,9 +146,10 @@ void GetDirection()
             direction = Direction.Right;
             break;
         case ConsoleKey.Escape:
-            closeRequested = true;
+            CloseRequested = true;
             break;
     }
+    return (direction, CloseRequested);
 }
 
 void PositionFood()

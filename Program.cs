@@ -1,8 +1,8 @@
-﻿//TODO Mode with random speeds within a range
+﻿//TODO restart feature
 //TODO Apple shouldn't spawn within 3 char of edge of map
-//TODO high-scores
-//TODO restart feature
-
+//TODO Scores
+//TODO Mode with random speeds within a range
+//TODO High scores
 
 Exception? exception = null;
 int speedInput;

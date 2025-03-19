@@ -42,7 +42,8 @@ while (restart is "yes" or "Yes")
         Console.Clear();
         snake.Enqueue((X, Y));
         board[X, Y] = Tile.Snake;
-        PositionFood();
+        (int FoodX, int FoodY) = PositionFood(width, height, board);
+        board[FoodX, FoodY] = Tile.Food;
         Console.SetCursorPosition(X, Y);
         Console.Write('S');
         while (direction is null && !CloseRequested)
@@ -90,7 +91,8 @@ while (restart is "yes" or "Yes")
             snake.Enqueue((X, Y));
             if (board[X, Y] is Tile.Food)
             {
-                PositionFood();
+                (FoodX, FoodY) = PositionFood(width, height, board);
+                board[FoodX, FoodY] = Tile.Food;
             }
             else
             {
@@ -102,7 +104,7 @@ while (restart is "yes" or "Yes")
             board[X, Y] = Tile.Snake;
             if (Console.KeyAvailable)
             {
-                GetDirection();
+                (direction, CloseRequested) = GetDirection(direction, CloseRequested);
             }
             Thread.Sleep(velocity - speedInput * snake.Count);
 
@@ -129,7 +131,7 @@ bool IsUserInputValid()
     { return false; }
     else { return true; }
 }
-(Direction?, bool) GetDirection(Direction? direction, bool CloseRequested)
+(Direction?, bool) GetDirection(Direction? direction, bool closeRequested)
 {
     switch (Console.ReadKey(true).Key)
     {
@@ -146,15 +148,15 @@ bool IsUserInputValid()
             direction = Direction.Right;
             break;
         case ConsoleKey.Escape:
-            CloseRequested = true;
+            closeRequested = true;
             break;
     }
-    return (direction, CloseRequested);
+    return (direction, closeRequested);
 }
 
-void PositionFood()
+(int, int) PositionFood(int width, int height, Tile[,] board)
 {
-    List<(int X, int Y)> possibleCoordinates = new();
+    List<(int X, int Y)> possibleCoordinates = [];
     for (int i = 0; i < width; i++)
     {
         for (int j = 0; j < height; j++)
@@ -167,11 +169,11 @@ void PositionFood()
     }
     int index = Random.Shared.Next(possibleCoordinates.Count);
     (int X, int Y) = possibleCoordinates[index];
-    board[X, Y] = Tile.Food;
     Console.SetCursorPosition(X, Y);
     Console.ForegroundColor = ConsoleColor.Red;
     Console.Write('+');
     Console.ForegroundColor = ConsoleColor.DarkGreen;
+    return (X, Y);
 }
 
 ConsoleColor ChooseRandomForegroundColour()

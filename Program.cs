@@ -1,5 +1,4 @@
-﻿//TODO restart feature
-//TODO Apple shouldn't spawn within 3 char of edge of map
+﻿//TODO Apple shouldn't spawn within 3 char of edge of map
 //TODO Scores
 //TODO Mode with random speeds within a range
 //TODO High scores
@@ -9,7 +8,7 @@ int speedInput;
 string restart = "yes";
 string prompt = $"Select speed from 1 - 10:  ";
 string? input;
-while (restart is "yes" or "Yes")
+while (restart is "yes" or "Yes" or "y" or "Y")
 {
     while (IsUserInputValid() == false)
     {
@@ -56,7 +55,7 @@ while (restart is "yes" or "Yes")
             {
                 Console.Clear();
                 Console.Write("Console was resized. Snake game has ended.");
-                return;
+                break;
             }
             switch (direction)
             {
@@ -73,13 +72,16 @@ while (restart is "yes" or "Yes")
                     X++;
                     break;
             }
+
+            //Checks if player has hit the boarder or themselves
             if (X < 0 || X >= width ||
                 Y < 0 || Y >= height ||
                 board[X, Y] is Tile.Snake)
             {
+                Console.ForegroundColor = ConsoleColor.Black;
                 Console.Clear();
-                Console.Write("Game Over. Score: " + (snake.Count - 1) + ".");
-                return;
+                Console.WriteLine("Game Over. Score: " + (snake.Count - 1) + ".");
+                break;
             }
             Console.SetCursorPosition(X, Y);
 
@@ -117,10 +119,14 @@ while (restart is "yes" or "Yes")
     }
     finally
     {
-        Console.Clear();
         Console.WriteLine(exception?.ToString() ?? "Snake was closed.");
+        Console.WriteLine("Would you like to play again?");
+        Console.WriteLine("y/n");
+        restart = Console.ReadLine()!;
+        Console.Clear();
     }
 }
+
 bool IsUserInputValid()
 {
     Console.Write(prompt);
@@ -156,19 +162,19 @@ bool IsUserInputValid()
 
 (int, int) PositionFood(int width, int height, Tile[,] board)
 {
-    List<(int X, int Y)> possibleCoordinates = [];
-    for (int i = 0; i < width; i++)
+    List<(int X, int Y)> openCoordinates = [];
+    for (int i = 3; i < width - 3; i++)
     {
-        for (int j = 0; j < height; j++)
+        for (int j = 3; j < height - 3; j++)
         {
             if (board[i, j] is Tile.Open)
             {
-                possibleCoordinates.Add((i, j));
+                openCoordinates.Add((i, j));
             }
         }
     }
-    int index = Random.Shared.Next(possibleCoordinates.Count);
-    (int X, int Y) = possibleCoordinates[index];
+    int index = Random.Shared.Next(openCoordinates.Count);
+    (int X, int Y) = openCoordinates[index];
     Console.SetCursorPosition(X, Y);
     Console.ForegroundColor = ConsoleColor.Red;
     Console.Write('+');
